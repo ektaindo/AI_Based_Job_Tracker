@@ -1,118 +1,48 @@
-# AI Based Job Tracker (Firebase + Next.js)
+# AI Based Job Tracker (Next.js + Firebase)
 
-This project is a starter template for an AI-powered job tracker using Firebase services and a Next.js frontend.
+This app now follows a simple user journey:
 
-## 1) Tech Stack
+1. **Signup page** (`/signup`) as the first page.
+2. **Login page** (`/login`) for existing users.
+3. **Dashboard page** (`/dashboard`) after successful authentication.
+4. Upload resume to **Firebase Storage** from the dashboard.
 
-- **Frontend:** Next.js
-- **UI:** Tailwind CSS
-- **Backend:** Firebase Cloud Functions (optional but scaffolded)
-- **Database:** Cloud Firestore
-- **Authentication:** Firebase Authentication
-- **File Upload:** Firebase Storage
-- **Email Parsing:** Gmail API
-- **AI:** OpenAI API or Claude
+## Environment setup
 
-## 2) System Architecture
-
-```text
-Next.js Frontend
-       |
-Firebase Auth  → Login / Signup
-       |
-Cloud Firestore → User Data + Jobs
-       |
-Firebase Storage → Resume Upload
-       |
-Cloud Functions
-       |---- Gmail API (Fetch applied jobs)
-       |---- LLM (job matching)
-```
-
-## 3) Firestore Database Structure
-
-Firestore uses collections/documents (NoSQL):
-
-### `users` collection
-
-```text
-users
-   |
-   |-- userId
-        name
-        email
-        resumeUrl
-        skills
-        experience
-        createdAt
-```
-
-### `appliedJobs` collection
-
-```text
-appliedJobs
-   |
-   |-- jobId
-        userId
-        company
-        role
-        portal
-        appliedDate
-        status
-```
-
-### `recommendedJobs` collection
-
-```text
-recommendedJobs
-   |
-   |-- jobId
-        role
-        company
-        source
-        link
-        matchScore
-```
-
-## 4) User Flow
-
-1. **Signup/Login** using Firebase Authentication.
-2. Auth options:
-   - Email/password
-   - Google login
-3. User lands on Dashboard after successful login.
-4. Resume is uploaded to Firebase Storage and linked in Firestore.
-5. Cloud Functions can:
-   - Fetch job activity via Gmail API.
-   - Use LLM to generate and store job recommendations.
-
-## 5) Local Setup
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Copy environment file:
-   ```bash
-   cp .env.example .env.local
-   ```
-3. Fill Firebase + API credentials in `.env.local`.
-4. Run app:
-   ```bash
-   npm run dev
-   ```
-
-## 6) Firebase Functions
-
-Cloud function placeholders are in `functions/src/index.ts`:
-- `parseGmailApplications`
-- `generateJobRecommendations`
-
-Deploy after configuring Firebase project:
+Copy env template:
 
 ```bash
-cd functions
-npm install
-npm run build
-firebase deploy --only functions
+cp .env.example .env.local
 ```
+
+Fill these values in `.env.local`:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GMAIL_CLIENT_ID=
+GMAIL_CLIENT_SECRET=
+GMAIL_REDIRECT_URI=
+```
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Resume upload
+
+- Upload UI: `components/resume-upload.tsx`
+- Storage path: `resumes/{uid}/{timestamp}-{filename}`
+- Supported types: `.pdf`, `.doc`, `.docx`
+
+The dashboard uses the currently authenticated Firebase UID so uploads align with storage security rules.
