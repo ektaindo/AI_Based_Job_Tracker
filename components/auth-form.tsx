@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import {
+  AuthError,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
@@ -16,6 +17,33 @@ type AuthMode = "signup" | "login";
 type AuthFormProps = {
   mode: AuthMode;
 };
+
+function friendlyFirebaseError(error: unknown, mode: AuthMode): string {
+  const code = (error as AuthError | undefined)?.code;
+
+  switch (code) {
+    case "auth/configuration-not-found":
+      return (
+        "Authentication is not configured in Firebase for this app. In Firebase Console, open Authentication → Sign-in method and enable " +
+        (mode === "signup" || mode === "login" ? "Email/Password" : "required providers") +
+        ". Also add your app domain (localhost) under Authentication → Settings → Authorized domains."
+      );
+    case "auth/invalid-api-key":
+      return "Invalid Firebase API key. Verify NEXT_PUBLIC_FIREBASE_* values in .env.local and restart the dev server.";
+    case "auth/app-not-authorized":
+      return "This app/domain is not authorized in Firebase. Add localhost to Authentication authorized domains.";
+    case "auth/operation-not-allowed":
+      return "This sign-in method is disabled. Enable it under Firebase Authentication → Sign-in method.";
+    case "auth/email-already-in-use":
+      return "This email is already registered. Try logging in instead.";
+    case "auth/invalid-credential":
+      return "Invalid credentials. Check email/password and try again.";
+    case "auth/wrong-password":
+      return "Incorrect password. Please try again.";
+    default:
+      return (error as Error)?.message ?? "Authentication failed. Please check Firebase configuration and try again.";
+  }
+}
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
@@ -33,7 +61,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     );
   }
 
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
@@ -47,7 +74,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
       router.push("/dashboard");
     } catch (authError) {
-      setError((authError as Error).message);
+      setError(friendlyFirebaseError(authError, mode));
     } finally {
       setLoading(false);
     }
@@ -60,7 +87,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       await signInWithPopup(auth, new GoogleAuthProvider());
       router.push("/dashboard");
     } catch (authError) {
-      setError((authError as Error).message);
+      setError(friendlyFirebaseError(authError, mode));
     } finally {
       setLoading(false);
     }
@@ -110,7 +137,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         Continue with Google
       </button>
 
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       <p className="mt-5 text-sm text-slate-600">
         {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
